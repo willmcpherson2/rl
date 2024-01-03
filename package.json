@@ -1,0 +1,15 @@
+{
+  "name": "rl",
+  "version": "0.1",
+  "scripts": {
+    "build": "tsc -p server && tsc -p client && cp -r static/* dist/client"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/ws": "^8.5.10",
+    "typescript": "^4.0.3"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}
