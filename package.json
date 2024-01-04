@@ -4,7 +4,7 @@
   "scripts": {
     "build:server": "npx webpack --config server.config.js",
     "build:client": "npx webpack --config client.config.js",
-    "build:static": "cp -r static/* dist/client",
+    "build:static": "cp -r src/static/* dist/client",
     "build": "npm run build:server && npm run build:client && npm run build:static"
   },
   "devDependencies": {

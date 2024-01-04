@@ -1,7 +1,7 @@
 const path = require("path");
 
 module.exports = {
-  entry: path.resolve(__dirname, "client", "main.ts"),
+  entry: path.resolve(__dirname, "src", "client", "main.ts"),
   devtool: "inline-source-map",
   module: {
     rules: [
