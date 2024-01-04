@@ -1,7 +1,25 @@
 # rl
 
+## Dependencies
+
 ```sh
 npm install
-npm run build
+```
+
+## Development build
+
+```sh
+npm run dev
+```
+
+## Production build
+
+```sh
+npm run prod
+```
+
+## Start server
+
+```sh
 npm run start
 ```
