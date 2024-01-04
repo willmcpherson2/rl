@@ -2,10 +2,13 @@
   "name": "rl",
   "version": "0.1",
   "scripts": {
-    "build:server": "npx webpack --config server.config.js",
-    "build:client": "npx webpack --config client.config.js",
-    "build:static": "cp -r src/static/* dist/client",
-    "build": "npm run build:server && npm run build:client && npm run build:static",
+    "static": "cp -r src/static/* dist/client",
+    "dev:server": "npx webpack --config server.config.js --mode=development",
+    "dev:client": "npx webpack --config client.config.js --mode=development",
+    "dev": "npm run dev:server && npm run dev:client && npm run static",
+    "prod:server": "npx webpack --config server.config.js --mode=production",
+    "prod:client": "npx webpack --config client.config.js --mode=production",
+    "prod": "npm run prod:server && npm run prod:client && npm run static",
     "start": "node --enable-source-maps dist/server/main.js 3000 dist/client"
   },
   "devDependencies": {
