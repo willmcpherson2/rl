@@ -1,18 +1,48 @@
-function makeSocket() {
-  console.log("hello from index.js");
+const dateFormat: Intl.DateTimeFormat = new Intl.DateTimeFormat(
+  "en-AU",
+  {
+    timeZone: "Australia/Sydney",
+    dateStyle: "medium",
+    timeStyle: "medium",
+  },
+);
+
+function log(msg: object): void {
+  console.log(JSON.stringify(
+    {
+      time: dateFormat.format(new Date()),
+      ...msg,
+    },
+    null,
+    2,
+  ));
+}
+
+function debug<T>(first: T, ...rest: T[]): T {
+  console.debug(first, ...rest);
+  const last = rest.at(-1) ?? first;
+  return last;
+}
+
+const port = 3000;
+
+function makeSocket(): void {
+  log({ port });
 
   const ws = new WebSocket("ws://localhost:3000");
 
   ws.addEventListener("message", event => {
-    console.log("received on client:", event.data);
+    log({ "got socket message:": event.data });
   });
 
   ws.addEventListener("open", () => {
-    ws.send("hello from client");
+    const msg = "hello from client";
+    ws.send(msg);
+    log({ "sent socket message": msg });
   });
 }
 
-function drawTriangle() {
+function drawTriangle(): void {
   const canvas = document.querySelector('#canvas');
 
   if (!(canvas instanceof HTMLCanvasElement)) {
