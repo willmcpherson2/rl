@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/server",
+    "sourceMap": true,
+    "module": "es6",
+    "target": "es5",
+    "moduleResolution": "node"
+  },
+  "include": ["server/**/*", "shared/**/*"]
+}

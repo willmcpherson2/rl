@@ -2,32 +2,7 @@ import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { readFile } from "node:fs";
 import { WebSocketServer } from "ws";
 import * as path from "node:path";
-
-const dateFormat: Intl.DateTimeFormat = new Intl.DateTimeFormat(
-  "en-AU",
-  {
-    timeZone: "Australia/Sydney",
-    dateStyle: "medium",
-    timeStyle: "medium",
-  },
-);
-
-function log(msg: object): void {
-  console.log(JSON.stringify(
-    {
-      time: dateFormat.format(new Date()),
-      ...msg,
-    },
-    null,
-    2,
-  ));
-}
-
-function debug<T>(first: T, ...rest: T[]): T {
-  console.debug(first, ...rest);
-  const last = rest.at(-1) ?? first;
-  return last;
-}
+import { log } from "../shared/log";
 
 function showRequest(req: IncomingMessage): object {
   return {

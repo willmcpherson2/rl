@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/client",
+    "sourceMap": true,
+    "module": "es6",
+    "target": "es5",
+    "moduleResolution": "node"
+  },
+  "include": ["client/**/*", "shared/**/*"]
+}
