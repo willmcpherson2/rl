@@ -2,18 +2,20 @@
   "name": "rl",
   "version": "0.1",
   "scripts": {
-    "static": "cp -r src/static/* dist/client",
-    "dev:server": "npx webpack --config server.config.js --mode=development",
-    "dev:client": "npx webpack --config client.config.js --mode=development",
-    "dev": "npm run dev:server && npm run dev:client && npm run static",
+    "dev:server": "npx webpack watch --config server.config.js --mode=development",
+    "dev:client": "npx webpack watch --config client.config.js --mode=development",
+    "dev:start": "node --watch --enable-source-maps dist/server/main.js 3000 dist/client",
+    "dev": "npm run dev:server & npm run dev:client & npm run dev:start",
+
     "prod:server": "npx webpack --config server.config.js --mode=production",
     "prod:client": "npx webpack --config client.config.js --mode=production",
-    "prod": "npm run prod:server && npm run prod:client && npm run static",
-    "start": "node --enable-source-maps dist/server/main.js 3000 dist/client"
+    "prod:start": "node --enable-source-maps dist/server/main.js 3000 dist/client",
+    "prod": "npm run prod:server && npm run prod:client && npm run prod:start"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
     "@types/ws": "^8.5.10",
+    "copy-webpack-plugin": "^12.0.1",
     "ts-loader": "^9.5.1",
     "typescript": "^4.9.5",
     "webpack": "^5.89.0",
