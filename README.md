@@ -6,20 +6,14 @@
 npm install
 ```
 
-## Development build
+## Run development server (live reloading)
 
 ```sh
 npm run dev
 ```
 
-## Production build
+## Run production server
 
 ```sh
 npm run prod
-```
-
-## Start server
-
-```sh
-npm run start
 ```
