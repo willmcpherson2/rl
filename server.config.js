@@ -14,7 +14,10 @@ module.exports = {
             configFile: "server.json"
           }
         },
-        exclude: /node_modules/,
+        include: [
+          path.resolve(__dirname, "src", "server"),
+          path.resolve(__dirname, "src", "shared"),
+        ],
       },
     ],
   },
@@ -24,5 +27,8 @@ module.exports = {
   output: {
     filename: "main.js",
     path: path.resolve(__dirname, "dist", "server"),
+  },
+  cache: {
+    type: "filesystem",
   },
 };

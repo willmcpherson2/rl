@@ -13,7 +13,10 @@ module.exports = {
             configFile: "client.json"
           }
         },
-        exclude: /node_modules/,
+        include: [
+          path.resolve(__dirname, "src", "client"),
+          path.resolve(__dirname, "src", "shared"),
+        ],
       },
     ],
   },
@@ -23,5 +26,8 @@ module.exports = {
   output: {
     filename: "main.js",
     path: path.resolve(__dirname, "dist", "client"),
+  },
+  cache: {
+    type: "filesystem",
   },
 };
