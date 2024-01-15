@@ -20,6 +20,20 @@ function makeSocket(): void {
   });
 }
 
+function initGl(): WebGLRenderingContext {
+  const canvas = document.querySelector("#canvas");
+  if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error("no canvas in document");
+  }
+
+  const gl = canvas.getContext("webgl");
+  if (gl === null) {
+    throw new Error("no webgl context in canvas");
+  }
+
+  return gl;
+}
+
 function initShader(
   gl: WebGLRenderingContext,
   type: "VERTEX_SHADER" | "FRAGMENT_SHADER",
@@ -39,60 +53,61 @@ function initShader(
   return shader;
 }
 
-function drawTriangle(): void {
-  const canvas = document.querySelector("#canvas");
-  if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error("no canvas in document");
-  }
-
-  const gl = canvas.getContext("webgl");
-  if (gl === null) {
-    throw new Error("no webgl context in canvas");
-  }
-
-  gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  const vertexShader = initShader(gl, "VERTEX_SHADER", shaderVert);
-  const fragmentShader = initShader(gl, "FRAGMENT_SHADER", shaderFrag);
-
+function initProgram(
+  gl: WebGLRenderingContext,
+  shaderVert: string,
+  shaderFrag: string,
+): WebGLProgram {
   const program = gl.createProgram();
   if (program === null) {
     throw new Error("createProgram returned null");
   }
 
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-
+  gl.attachShader(program, initShader(gl, "VERTEX_SHADER", shaderVert));
+  gl.attachShader(program, initShader(gl, "FRAGMENT_SHADER", shaderFrag));
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     throw new Error(`LINK_STATUS false: ${gl.getProgramInfoLog(program)}`);
   }
 
+  return program;
+}
+
+function draw(
+  gl: WebGLRenderingContext,
+  program: WebGLProgram,
+  positions: number[],
+): void {
   gl.useProgram(program);
+
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
 
   const positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+  const index = gl.getAttribLocation(program, "a_position");
+  gl.vertexAttribPointer(index, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(index);
+  gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
+}
 
-  const positions = [
+function drawTriangles(): void {
+  const gl = initGl();
+  const program = initProgram(gl, shaderVert, shaderFrag);
+  draw(gl, program, [
     -1, -1,
     -1, 0.9,
     0.9, -1,
     1, 1,
     -0.9, 1,
     1, -0.9,
-  ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-  const index = gl.getAttribLocation(program, "a_position");
-  gl.vertexAttribPointer(index, 2, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(index);
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  ]);
 }
 
 function main() {
   makeSocket();
-  drawTriangle();
+  drawTriangles();
 }
 
 main();
