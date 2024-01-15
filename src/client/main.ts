@@ -1,4 +1,6 @@
 import { log } from "../shared/log";
+import shaderVert from "./shaders/vertex.glsl";
+import shaderFrag from "./shaders/fragment.glsl";
 
 const port = 3000;
 
@@ -51,25 +53,8 @@ function drawTriangle(): void {
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  const vertexShader = initShader(
-    gl,
-    "VERTEX_SHADER",
-    `
-attribute vec4 a_position;
-
-void main() {
-  gl_Position = a_position;
-}
-`);
-
-  const fragmentShader = initShader(
-    gl,
-    "FRAGMENT_SHADER",
-    `
-void main() {
-  gl_FragColor = vec4(1, 0, 0.5, 1);
-}
-`);
+  const vertexShader = initShader(gl, "VERTEX_SHADER", shaderVert);
+  const fragmentShader = initShader(gl, "FRAGMENT_SHADER", shaderFrag);
 
   const program = gl.createProgram();
   if (program === null) {

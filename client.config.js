@@ -25,6 +25,10 @@ module.exports = {
           path.resolve(__dirname, "src", "shared"),
         ],
       },
+      {
+        test: /\.glsl/,
+        loader: "ts-shader-loader",
+      },
     ],
   },
   resolve: {
