@@ -2,12 +2,10 @@ import { log } from "../shared/log";
 import shaderVert from "./shaders/vertex.glsl";
 import shaderFrag from "./shaders/fragment.glsl";
 
-const port = 3000;
-
-function makeSocket(): void {
+function initSocket(): void {
+  const port = 3000;
   log({ port });
-
-  const ws = new WebSocket("ws://localhost:3000");
+  const ws = new WebSocket(`ws://localhost:${port}`);
 
   ws.addEventListener("message", event => {
     log({ "got socket message:": event.data });
@@ -106,7 +104,7 @@ function drawTriangles(): void {
 }
 
 function main() {
-  makeSocket();
+  initSocket();
   drawTriangles();
 }
 
