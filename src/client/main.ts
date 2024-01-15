@@ -18,45 +18,43 @@ function makeSocket(): void {
   });
 }
 
+function initShader(
+  gl: WebGLRenderingContext,
+  type: "VERTEX_SHADER" | "FRAGMENT_SHADER",
+  source: string,
+): WebGLShader {
+  const shader = gl.createShader(gl[type]);
+  if (shader === null) {
+    throw new Error("createShader returned null");
+  }
+
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error(`COMPILE_STATUS false: ${gl.getShaderInfoLog(shader)}`);
+  }
+
+  return shader;
+}
+
 function drawTriangle(): void {
-  const canvas = document.querySelector('#canvas');
-
+  const canvas = document.querySelector("#canvas");
   if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No html canvas element.');
+    throw new Error("no canvas in document");
   }
 
-  // WebGL rendering context
-  const gl = canvas.getContext('webgl');
-
-  if (!gl) {
-    throw new Error('Unable to initialize WebGL.');
+  const gl = canvas.getContext("webgl");
+  if (gl === null) {
+    throw new Error("no webgl context in canvas");
   }
 
-  // Clear color
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // A user-defined function to create and compile shaders
-  const initShader = (type: 'VERTEX_SHADER' | 'FRAGMENT_SHADER', source: string) => {
-    const shader = gl.createShader(gl[type]);
-
-    if (!shader) {
-      throw new Error('Unable to create a shader.');
-    }
-
-    gl.shaderSource(shader, source);
-
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      throw new Error(`An error occurred compiling the shaders: ${gl.getShaderInfoLog(shader)}`);
-    }
-
-    return shader;
-  }
-
-  // Vertex shader
-  const vertexShader = initShader('VERTEX_SHADER', `
+  const vertexShader = initShader(
+    gl,
+    "VERTEX_SHADER",
+    `
 attribute vec4 a_position;
 
 void main() {
@@ -64,53 +62,47 @@ void main() {
 }
 `);
 
-  // Fragment shader
-  const fragmentShader = initShader('FRAGMENT_SHADER', `
+  const fragmentShader = initShader(
+    gl,
+    "FRAGMENT_SHADER",
+    `
 void main() {
   gl_FragColor = vec4(1, 0, 0.5, 1);
 }
 `);
 
-  // WebGL program
   const program = gl.createProgram();
-
-  if (!program) {
-    throw new Error('Unable to create the program.');
+  if (program === null) {
+    throw new Error("createProgram returned null");
   }
 
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
 
   gl.linkProgram(program);
-
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    throw new Error(`Unable to link the shaders: ${gl.getProgramInfoLog(program)}`);
+    throw new Error(`LINK_STATUS false: ${gl.getProgramInfoLog(program)}`);
   }
 
   gl.useProgram(program);
 
-  // Vertext buffer
   const positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
   const positions = [
-    0, 1,
-    0.866, -0.5,
-    -0.866, -0.5,
+    -1, -1,
+    -1, 0.9,
+    0.9, -1,
+    1, 1,
+    -0.9, 1,
+    1, -0.9,
   ];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-  const index = gl.getAttribLocation(program, 'a_position');
-  const size = 2;
-  const type = gl.FLOAT;
-  const normalized = false;
-  const stride = 0;
-  const offset = 0;
-  gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+  const index = gl.getAttribLocation(program, "a_position");
+  gl.vertexAttribPointer(index, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(index);
-
-  // Draw the scene
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
 function main() {
