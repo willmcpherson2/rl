@@ -2,12 +2,12 @@
   "name": "rl",
   "version": "0.1",
   "scripts": {
-    "dev:server": "npx webpack watch --config server.config.js --mode=development --devtool inline-source-map",
-    "dev:client": "npx webpack watch --config client.config.js --mode=development --devtool inline-source-map",
+    "dev:server": "npx webpack watch --config server/webpack.config.js --mode=development --devtool inline-source-map",
+    "dev:client": "npx webpack watch --config client/webpack.config.js --mode=development --devtool inline-source-map",
     "dev:start": "node --watch --enable-source-maps dist/server/main.js 3000 dist/client",
     "dev": "npm run dev:server & npm run dev:client & npm run dev:start",
-    "prod:server": "npx webpack --config server.config.js --mode=production",
-    "prod:client": "npx webpack --config client.config.js --mode=production",
+    "prod:server": "npx webpack --config server/webpack.config.js  --mode=production",
+    "prod:client": "npx webpack --config client/webpack.config.js --mode=production",
     "prod:start": "node dist/server/main.js 3000 dist/client",
     "prod": "npm run prod:server && npm run prod:client && npm run prod:start"
   },

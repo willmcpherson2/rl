@@ -2,7 +2,7 @@ import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { readFile } from "node:fs";
 import { WebSocketServer } from "ws";
 import * as path from "node:path";
-import { log } from "../shared/log";
+import { log } from "../../shared/log";
 
 function showRequest(req: IncomingMessage): object {
   return {
