@@ -29,6 +29,10 @@ module.exports = {
         test: /\.glsl/,
         loader: "ts-shader-loader",
       },
+      {
+        test: /\.gltf/,
+        type: "asset/source",
+      },
     ],
   },
   resolve: {

@@ -1,6 +1,8 @@
 import { log } from "../shared/log";
-import shaderVert from "./shaders/vertex.glsl";
-import shaderFrag from "./shaders/fragment.glsl";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
+import monkey from "./models/monkey.gltf";
 
 function initSocket(): void {
   const port = 3000;
@@ -18,94 +20,65 @@ function initSocket(): void {
   });
 }
 
-function initGl(): WebGLRenderingContext {
-  const canvas = document.querySelector("#canvas");
-  if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error("no canvas in document");
-  }
+function draw() {
+  const scene = new THREE.Scene();
+  scene.add(new THREE.AxesHelper(5));
 
-  const gl = canvas.getContext("webgl");
-  if (gl === null) {
-    throw new Error("no webgl context in canvas");
-  }
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000,
+  );
+  camera.position.z = 4;
 
-  return gl;
-}
+  const light = new THREE.AmbientLight(0xaaaaaa);
+  scene.add(light);
 
-function initShader(
-  gl: WebGLRenderingContext,
-  type: "VERTEX_SHADER" | "FRAGMENT_SHADER",
-  source: string,
-): WebGLShader {
-  const shader = gl.createShader(gl[type]);
-  if (shader === null) {
-    throw new Error("createShader returned null");
-  }
+  const spotLight = new THREE.SpotLight(0xffffff);
+  spotLight.position.set(1, 1, 1);
+  scene.add(spotLight);
 
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    throw new Error(`COMPILE_STATUS false: ${gl.getShaderInfoLog(shader)}`);
-  }
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
-  return shader;
-}
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.render(scene, camera);
+  });
 
-function initProgram(
-  gl: WebGLRenderingContext,
-  shaderVert: string,
-  shaderFrag: string,
-): WebGLProgram {
-  const program = gl.createProgram();
-  if (program === null) {
-    throw new Error("createProgram returned null");
-  }
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
 
-  gl.attachShader(program, initShader(gl, "VERTEX_SHADER", shaderVert));
-  gl.attachShader(program, initShader(gl, "FRAGMENT_SHADER", shaderFrag));
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    throw new Error(`LINK_STATUS false: ${gl.getProgramInfoLog(program)}`);
-  }
+  const loader = new GLTFLoader();
+  loader.parse(
+    monkey,
+    "",
+    gltf => {
+      gltf.scene.traverse(child => {
+        if (child instanceof THREE.Mesh) {
+          child.material.metalness = 0;
+        }
+      });
+      scene.add(gltf.scene);
+    },
+  );
 
-  return program;
-}
+  const animate = () => {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  };
 
-function draw(
-  gl: WebGLRenderingContext,
-  program: WebGLProgram,
-  positions: number[],
-): void {
-  gl.useProgram(program);
-
-  gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-  const positionBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-  const index = gl.getAttribLocation(program, "a_position");
-  gl.vertexAttribPointer(index, 2, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(index);
-  gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
-}
-
-function drawTriangles(): void {
-  const gl = initGl();
-  const program = initProgram(gl, shaderVert, shaderFrag);
-  draw(gl, program, [
-    -1, -1,
-    -1, 0.9,
-    0.9, -1,
-    1, 1,
-    -0.9, 1,
-    1, -0.9,
-  ]);
+  animate();
 }
 
 function main() {
   initSocket();
-  drawTriangles();
+  draw();
 }
 
 main();
