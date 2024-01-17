@@ -43,12 +43,11 @@ function draw() {
   );
   camera.position.z = 4;
 
-  const light = new THREE.AmbientLight(0xaaaaaa);
+  const light = new THREE.AmbientLight(0x888888, 0.5);
   scene.add(light);
 
-  const spotLight = new THREE.SpotLight(0xffffff);
-  spotLight.position.set(1, 1, 1);
-  scene.add(spotLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  scene.add(directionalLight);
 
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -64,22 +63,35 @@ function draw() {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
+  let player: THREE.Object3D | null = null;
   const loader = new GLTFLoader();
   loader.parse(
     monkey,
     "",
     gltf => {
-      gltf.scene.traverse(child => {
-        if (child instanceof THREE.Mesh) {
-          child.material.metalness = 0;
-        }
-      });
-      scene.add(gltf.scene);
+      const child = gltf.scene.children[0];
+      if (!child) {
+        throw new Error("no children in gltf scene");
+      }
+      player = child;
+      if (player instanceof THREE.Mesh) {
+        player.material.metalness = 0;
+      }
+      scene.add(player);
     },
   );
 
   const animate = () => {
     requestAnimationFrame(animate);
+    if (player && state) {
+      const pos = state.game.positions[state.id];
+      if (!pos) {
+        throw new Error(`no position for id ${state.id}`);
+      }
+      player.position.x = pos.x;
+      player.position.y = pos.y;
+      player.position.z = pos.z;
+    }
     controls.update();
     renderer.render(scene, camera);
   };

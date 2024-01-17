@@ -48,8 +48,18 @@ function respondPlainText(
 }
 
 function main(): void {
-  const port = process.argv[2];
-  const root = path.join(process.cwd(), process.argv[3]);
+  const portArg = process.argv[2];
+  if (!portArg) {
+    throw new Error("no port number supplied: `node SCRIPT PORT DIR`");
+  }
+  const port = portArg;
+
+  const rootArg = process.argv[3];
+  if (!rootArg) {
+    throw new Error("no root directory supplied: `node SCRIPT PORT DIR`");
+  }
+  const root = path.join(process.cwd(), rootArg);
+
   log({ port, root });
 
   const server = createServer((req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
@@ -74,7 +84,7 @@ function main(): void {
 
       switch (msg.type) {
         case "joinGameRequest": {
-          state.game.positions[state.idCounter] = { x: 0, y: 0, z: 0 };
+          state.game.positions[state.idCounter] = { x: -2, y: 0, z: -2 };
           const reply: Message = {
             type: "joinGameResponse",
             clientState: {
