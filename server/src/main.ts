@@ -3,6 +3,14 @@ import { readFile } from "node:fs";
 import { WebSocketServer } from "ws";
 import * as path from "node:path";
 import { log } from "../../shared/log";
+import { Message, ServerState } from "../../shared/state";
+
+const state: ServerState = {
+  idCounter: 0,
+  game: {
+    positions: {},
+  },
+};
 
 function showRequest(req: IncomingMessage): object {
   return {
@@ -61,10 +69,26 @@ function main(): void {
   const wss = new WebSocketServer({ server });
   wss.on("connection", ws => {
     ws.on("message", data => {
-      log({ "got socket message": data.toString() });
-    });
+      const msg: Message = JSON.parse(data.toString());
+      log({ "got message": msg });
 
-    ws.send("hello from server");
+      switch (msg.type) {
+        case "joinGameRequest": {
+          state.game.positions[state.idCounter] = { x: 0, y: 0, z: 0 };
+          const reply: Message = {
+            type: "joinGameResponse",
+            clientState: {
+              id: state.idCounter,
+              game: state.game,
+            },
+          };
+          log({ "sent reply": reply });
+          ws.send(JSON.stringify(reply));
+          state.idCounter += 1;
+          break;
+        }
+      }
+    });
   });
 
   server.listen(port);

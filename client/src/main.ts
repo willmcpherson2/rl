@@ -3,6 +3,9 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
 import monkey from "./models/monkey.gltf";
+import { ClientState, Message } from "../../shared/state";
+
+let state: ClientState | null = null;
 
 function initSocket(): void {
   const port = 3000;
@@ -10,13 +13,21 @@ function initSocket(): void {
   const ws = new WebSocket(`ws://localhost:${port}`);
 
   ws.addEventListener("message", event => {
-    log({ "got socket message:": event.data });
+    const msg: Message = JSON.parse(event.data);
+    log({ "got message": msg });
+
+    switch (msg.type) {
+      case "joinGameResponse": {
+        state = msg.clientState;
+        break;
+      }
+    }
   });
 
   ws.addEventListener("open", () => {
-    const msg = "hello from client";
-    ws.send(msg);
-    log({ "sent socket message": msg });
+    const msg: Message = { type: "joinGameRequest" };
+    ws.send(JSON.stringify(msg));
+    log({ "sent message": msg });
   });
 }
 

@@ -1,0 +1,16 @@
+simple server-client architecture
+
+server sends state to client
+client renders state
+client sends inputs to server
+server simulates inputs on state
+repeat
+
+server: state -> client
+client: render(state)
+client: input -> server
+server: simulate(state, input)
+...
+
+you could also simulate locally on the client after sending the input, to get
+inaccurate but quick feedback
