@@ -2,7 +2,7 @@ import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { readFile } from "node:fs";
 import { WebSocketServer } from "ws";
 import * as path from "node:path";
-import { log } from "../../shared/log";
+import { log, unwrap } from "../../shared/util";
 import { Message, ServerState } from "../../shared/state";
 
 const state: ServerState = {
@@ -48,18 +48,11 @@ function respondPlainText(
 }
 
 function main(): void {
-  const portArg = process.argv[2];
-  if (!portArg) {
-    throw new Error("no port number supplied: `node SCRIPT PORT DIR`");
-  }
-  const port = portArg;
-
-  const rootArg = process.argv[3];
-  if (!rootArg) {
-    throw new Error("no root directory supplied: `node SCRIPT PORT DIR`");
-  }
-  const root = path.join(process.cwd(), rootArg);
-
+  const port = unwrap(process.argv[2], "no port number supplied: `node SCRIPT PORT DIR`");
+  const root = path.join(
+    process.cwd(),
+    unwrap(process.argv[3], "no root directory supplied: `node SCRIPT PORT DIR`"),
+  );
   log({ port, root });
 
   const server = createServer((req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {

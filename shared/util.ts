@@ -23,3 +23,11 @@ export function debug<T>(first: T, ...rest: T[]): T {
   const last = rest.at(-1) ?? first;
   return last;
 }
+
+export function unwrap<T>(x: T | null | undefined, msg: string): T {
+  if (x) {
+    return x;
+  } else {
+    throw new Error(msg);
+  }
+}

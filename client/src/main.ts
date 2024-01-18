@@ -1,4 +1,4 @@
-import { log } from "../../shared/log";
+import { log, unwrap } from "../../shared/util";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
@@ -69,11 +69,7 @@ function draw() {
     monkey,
     "",
     gltf => {
-      const child = gltf.scene.children[0];
-      if (!child) {
-        throw new Error("no children in gltf scene");
-      }
-      player = child;
+      player = unwrap(gltf.scene.children[0], "no children in gltf scene");
       if (player instanceof THREE.Mesh) {
         player.material.metalness = 0;
       }
@@ -84,10 +80,7 @@ function draw() {
   const animate = () => {
     requestAnimationFrame(animate);
     if (player && state) {
-      const pos = state.game.positions[state.id];
-      if (!pos) {
-        throw new Error(`no position for id ${state.id}`);
-      }
+      const pos = unwrap(state.game.positions[state.id], `no position for id ${state.id}`);
       player.position.x = pos.x;
       player.position.y = pos.y;
       player.position.z = pos.z;
