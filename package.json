@@ -2,19 +2,23 @@
   "name": "rl",
   "version": "0.1",
   "scripts": {
-    "dev:server": "npx webpack watch --config server/webpack.config.js --mode=development --devtool inline-source-map",
-    "dev:client": "npx webpack watch --config client/webpack.config.js --mode=development --devtool inline-source-map",
+    "dev:server": "npx webpack --config server/webpack.config.js --mode=development --devtool inline-source-map",
+    "dev:client": "npx webpack --config client/webpack.config.js --mode=development --devtool inline-source-map",
+    "dev:build": "npx concurrently npm:dev:server npm:dev:client",
     "dev:start": "node --watch --enable-source-maps dist/server/main.js 3000 dist/client",
-    "dev": "npm run dev:server & npm run dev:client & npm run dev:start",
+    "dev:watch": "npx concurrently -P npm:dev:start 'npm:dev:server -- {1}' 'npm:dev:client -- {1}' -- --watch",
+    "dev": "npm run dev:build && npm run dev:watch",
     "prod:server": "npx webpack --config server/webpack.config.js  --mode=production",
     "prod:client": "npx webpack --config client/webpack.config.js --mode=production",
+    "prod:build": "npx concurrently npm:prod:server npm:prod:client",
     "prod:start": "node dist/server/main.js 3000 dist/client",
-    "prod": "npm run prod:server && npm run prod:client && npm run prod:start"
+    "prod": "npm run prod:build && npm run prod:start"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
     "@types/three": "^0.160.0",
     "@types/ws": "^8.5.10",
+    "concurrently": "^8.2.2",
     "copy-webpack-plugin": "^12.0.1",
     "ts-loader": "^9.5.1",
     "ts-shader-loader": "^2.0.2",
