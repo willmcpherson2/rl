@@ -2,6 +2,7 @@ import { createServer, IncomingMessage, Server, ServerResponse } from "node:http
 import { readFile } from "node:fs";
 import { WebSocketServer } from "ws";
 import * as path from "node:path";
+import * as THREE from "three";
 import { log, unwrap } from "../../shared/util";
 import { Message, ServerState } from "../../shared/state";
 
@@ -73,7 +74,7 @@ function initSocket(server: Server): void {
     });
 
     state.idCounter += 1;
-    state.game.positions[state.idCounter] = { x: state.idCounter, y: 0, z: 0 };
+    state.game.positions[state.idCounter] = new THREE.Vector3(state.idCounter, 0, 0);
 
     const reply: Message = {
       type: "joinGameResponse",

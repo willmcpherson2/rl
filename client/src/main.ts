@@ -41,9 +41,7 @@ function initSocket(): void {
         state.models = Object.fromEntries(
           Object.entries(state.game.positions).map(([id, pos]) => {
             const player = state.player.clone();
-            player.position.x = pos.x;
-            player.position.y = pos.y;
-            player.position.z = pos.z;
+            player.position.copy(pos);
             state.scene.add(player);
             return [id, player];
           }),
@@ -57,9 +55,7 @@ function initSocket(): void {
         state.game = msg.game;
         const player = state.player.clone();
         const pos = unwrap(state.game.positions[msg.id], `no player with id ${msg.id}`);
-        player.position.x = pos.x;
-        player.position.y = pos.y;
-        player.position.z = pos.z;
+        player.position.copy(pos);
         state.scene.add(player);
         state.models = { ...state.models, [msg.id]: player };
         break;

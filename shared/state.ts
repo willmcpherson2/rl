@@ -1,14 +1,10 @@
-export type ClientId = number;
+import * as THREE from "three";
 
-export type Pos = {
-  x: number;
-  y: number;
-  z: number;
-};
+export type ClientId = number;
 
 export type Game = {
   positions: {
-    [key: ClientId]: Pos;
+    [key: ClientId]: THREE.Vector3;
   };
 };
 
@@ -17,7 +13,7 @@ export type ServerState = {
   game: Game;
 };
 
-export type Input = Pos;
+export type Input = THREE.Vector3;
 
 export type Message =
   | { type: "joinGameResponse"; id: ClientId; game: Game }
