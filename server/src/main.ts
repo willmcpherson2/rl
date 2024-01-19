@@ -1,4 +1,4 @@
-import { createServer, IncomingMessage, ServerResponse } from "node:http";
+import { createServer, IncomingMessage, Server, ServerResponse } from "node:http";
 import { readFile } from "node:fs";
 import { WebSocketServer } from "ws";
 import * as path from "node:path";
@@ -47,15 +47,8 @@ function respondPlainText(
   res.end(text);
 }
 
-function main(): void {
-  const port = unwrap(process.argv[2], "no port number supplied: `node SCRIPT PORT DIR`");
-  const root = path.join(
-    process.cwd(),
-    unwrap(process.argv[3], "no root directory supplied: `node SCRIPT PORT DIR`"),
-  );
-  log({ port, root });
-
-  const server = createServer((req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
+function initServer(root: string): Server {
+  return createServer((req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
     log(showRequest(req));
 
     if (req.method === "GET" && req.url === "/") {
@@ -68,8 +61,11 @@ function main(): void {
       respondPlainText(res, 404, "not found");
     }
   });
+}
 
+function initSocket(server: Server): void {
   const wss = new WebSocketServer({ server });
+
   wss.on("connection", ws => {
     ws.on("message", data => {
       const msg: Message = JSON.parse(data.toString());
@@ -97,7 +93,18 @@ function main(): void {
       ws.send(JSON.stringify(reply));
     });
   });
+}
 
+function main(): void {
+  const port = unwrap(process.argv[2], "no port number supplied: `node SCRIPT PORT DIR`");
+  const root = path.join(
+    process.cwd(),
+    unwrap(process.argv[3], "no root directory supplied: `node SCRIPT PORT DIR`"),
+  );
+  log({ port, root });
+
+  const server = initServer(root);
+  initSocket(server);
   server.listen(port);
 }
 
