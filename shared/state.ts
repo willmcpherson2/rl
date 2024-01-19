@@ -8,11 +8,6 @@ export type Game = {
   };
 };
 
-export type ServerState = {
-  idCounter: ClientId;
-  game: Game;
-};
-
 export type Input = THREE.Vector3;
 
 export type Message =

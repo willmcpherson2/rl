@@ -4,9 +4,14 @@ import { WebSocketServer } from "ws";
 import * as path from "node:path";
 import * as THREE from "three";
 import { log, unwrap } from "../../shared/util";
-import { Message, ServerState } from "../../shared/state";
+import { ClientId, Game, Message } from "../../shared/state";
 
-const state: ServerState = {
+export type State = {
+  idCounter: ClientId;
+  game: Game;
+};
+
+const state: State = {
   idCounter: 0,
   game: {
     positions: {},

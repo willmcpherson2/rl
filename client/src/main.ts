@@ -5,7 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
 import models from "./models/models.gltf";
 import { ClientId, Game, Message } from "../../shared/state";
 
-type ClientState = {
+type State = {
   id: ClientId;
   game: Game;
   player: THREE.Object3D;
@@ -15,7 +15,7 @@ type ClientState = {
   };
 };
 
-const state: ClientState = {
+const state: State = {
   id: 0,
   game: {
     positions: {},
