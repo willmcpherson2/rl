@@ -8,6 +8,8 @@ import { ClientId, Game, Message } from "../../shared/state";
 type ClientState = {
   id: ClientId;
   game: Game;
+  player: THREE.Object3D;
+  scene: THREE.Scene;
   models: {
     [key: ClientId]: THREE.Object3D;
   };
@@ -18,6 +20,8 @@ const state: ClientState = {
   game: {
     positions: {},
   },
+  scene: new THREE.Scene(),
+  player: await loadModel(),
   models: {},
 };
 
@@ -34,15 +38,33 @@ function initSocket(): void {
       case "joinGameResponse": {
         state.id = msg.id;
         state.game = msg.game;
+        state.models = Object.fromEntries(
+          Object.entries(state.game.positions).map(([id, pos]) => {
+            const player = state.player.clone();
+            player.position.x = pos.x;
+            player.position.y = pos.y;
+            player.position.z = pos.z;
+            state.scene.add(player);
+            return [id, player];
+          }),
+        );
+        break;
+      }
+      case "playerJoined": {
+        if (msg.id === state.id) {
+          break;
+        }
+        state.game = msg.game;
+        const player = state.player.clone();
+        const pos = unwrap(state.game.positions[msg.id], `no player with id ${msg.id}`);
+        player.position.x = pos.x;
+        player.position.y = pos.y;
+        player.position.z = pos.z;
+        state.scene.add(player);
+        state.models = { ...state.models, [msg.id]: player };
         break;
       }
     }
-  });
-
-  ws.addEventListener("open", () => {
-    const msg: Message = { type: "joinGameRequest" };
-    ws.send(JSON.stringify(msg));
-    log({ "sent message": msg });
   });
 }
 
@@ -56,9 +78,8 @@ async function loadModel(): Promise<THREE.Object3D> {
   return model;
 }
 
-async function initRenderer(): Promise<void> {
-  const scene = new THREE.Scene();
-  scene.add(new THREE.AxesHelper(5));
+function initRenderer(): void {
+  state.scene.add(new THREE.AxesHelper(5));
 
   const camera = new THREE.PerspectiveCamera(
     75,
@@ -69,10 +90,10 @@ async function initRenderer(): Promise<void> {
   camera.position.z = 4;
 
   const light = new THREE.AmbientLight(0x888888, 0.5);
-  scene.add(light);
+  state.scene.add(light);
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-  scene.add(directionalLight);
+  state.scene.add(directionalLight);
 
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -82,35 +103,16 @@ async function initRenderer(): Promise<void> {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.render(scene, camera);
+    renderer.render(state.scene, camera);
   });
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
-  const player = await loadModel();
-
   const draw = () => {
     requestAnimationFrame(draw);
-
-    const loadingModels = Object.keys(state.models).length === 0;
-    const loadedGame = Object.keys(state.game.positions).length !== 0;
-    if (loadingModels && loadedGame) {
-      state.models = Object.fromEntries(
-        Object.keys(state.game.positions).map(id => [id, player.clone()]),
-      );
-      Object.values(state.models).forEach(model => scene.add(model));
-    }
-
-    Object.entries(state.game.positions).forEach(([id, pos]) => {
-      const model = unwrap(state.models[parseInt(id)], `no model for id ${id}`);
-      model.position.x = pos.x;
-      model.position.y = pos.y;
-      model.position.z = pos.z;
-    });
-
     controls.update();
-    renderer.render(scene, camera);
+    renderer.render(state.scene, camera);
   };
 
   draw();

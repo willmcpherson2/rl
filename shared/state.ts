@@ -20,5 +20,5 @@ export type ServerState = {
 export type Input = Pos;
 
 export type Message =
-  | { type: "joinGameRequest" }
-  | { type: "joinGameResponse"; id: ClientId, game: Game };
+  | { type: "joinGameResponse"; id: ClientId; game: Game }
+  | { type: "playerJoined"; id: ClientId; game: Game };

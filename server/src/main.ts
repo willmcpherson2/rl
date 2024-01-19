@@ -6,7 +6,7 @@ import { log, unwrap } from "../../shared/util";
 import { Message, ServerState } from "../../shared/state";
 
 const state: ServerState = {
-  idCounter: 1,
+  idCounter: 0,
   game: {
     positions: {},
   },
@@ -74,21 +74,27 @@ function main(): void {
     ws.on("message", data => {
       const msg: Message = JSON.parse(data.toString());
       log({ "got message": msg });
+    });
 
-      switch (msg.type) {
-        case "joinGameRequest": {
-          state.game.positions[state.idCounter] = { x: state.idCounter, y: 0, z: 0 };
-          const reply: Message = {
-            type: "joinGameResponse",
-            id: state.idCounter,
-            game: state.game,
-          };
-          log({ "sent reply": reply });
-          ws.send(JSON.stringify(reply));
-          state.idCounter += 1;
-          break;
-        }
-      }
+    state.idCounter += 1;
+    state.game.positions[state.idCounter] = { x: state.idCounter, y: 0, z: 0 };
+
+    const reply: Message = {
+      type: "joinGameResponse",
+      id: state.idCounter,
+      game: state.game,
+    };
+    log({ "sent reply": reply });
+    ws.send(JSON.stringify(reply));
+
+    wss.clients.forEach(ws => {
+      const reply: Message = {
+        type: "playerJoined",
+        id: state.idCounter,
+        game: state.game,
+      };
+      log({ "sent reply": reply });
+      ws.send(JSON.stringify(reply));
     });
   });
 
