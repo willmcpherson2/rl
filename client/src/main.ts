@@ -2,10 +2,24 @@ import { log, unwrap } from "../../shared/util";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
-import monkey from "./models/monkey.gltf";
-import { ClientState, Message } from "../../shared/state";
+import models from "./models/models.gltf";
+import { ClientId, Game, Message } from "../../shared/state";
 
-let state: ClientState | null = null;
+type ClientState = {
+  id: ClientId;
+  game: Game;
+  models: {
+    [key: ClientId]: THREE.Object3D;
+  };
+};
+
+const state: ClientState = {
+  id: 0,
+  game: {
+    positions: {},
+  },
+  models: {},
+};
 
 function initSocket(): void {
   const port = 3000;
@@ -18,7 +32,8 @@ function initSocket(): void {
 
     switch (msg.type) {
       case "joinGameResponse": {
-        state = msg.clientState;
+        state.id = msg.id;
+        state.game = msg.game;
         break;
       }
     }
@@ -31,7 +46,17 @@ function initSocket(): void {
   });
 }
 
-function draw() {
+async function loadModel(): Promise<THREE.Object3D> {
+  const loader = new GLTFLoader();
+  const gltf = await loader.parseAsync(models, "");
+  const model = unwrap(gltf.scene.children[0], "no children in gltf scene");
+  if (model instanceof THREE.Mesh) {
+    model.material.metalness = 0;
+  }
+  return model;
+}
+
+async function initRenderer(): Promise<void> {
   const scene = new THREE.Scene();
   scene.add(new THREE.AxesHelper(5));
 
@@ -63,38 +88,37 @@ function draw() {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
-  let player: THREE.Object3D | null = null;
-  const loader = new GLTFLoader();
-  loader.parse(
-    monkey,
-    "",
-    gltf => {
-      player = unwrap(gltf.scene.children[0], "no children in gltf scene");
-      if (player instanceof THREE.Mesh) {
-        player.material.metalness = 0;
-      }
-      scene.add(player);
-    },
-  );
+  const player = await loadModel();
 
-  const animate = () => {
-    requestAnimationFrame(animate);
-    if (player && state) {
-      const pos = unwrap(state.game.positions[state.id], `no position for id ${state.id}`);
-      player.position.x = pos.x;
-      player.position.y = pos.y;
-      player.position.z = pos.z;
+  const draw = () => {
+    requestAnimationFrame(draw);
+
+    const loadingModels = Object.keys(state.models).length === 0;
+    const loadedGame = Object.keys(state.game.positions).length !== 0;
+    if (loadingModels && loadedGame) {
+      state.models = Object.fromEntries(
+        Object.keys(state.game.positions).map(id => [id, player.clone()]),
+      );
+      Object.values(state.models).forEach(model => scene.add(model));
     }
+
+    Object.entries(state.game.positions).forEach(([id, pos]) => {
+      const model = unwrap(state.models[parseInt(id)], `no model for id ${id}`);
+      model.position.x = pos.x;
+      model.position.y = pos.y;
+      model.position.z = pos.z;
+    });
+
     controls.update();
     renderer.render(scene, camera);
   };
 
-  animate();
+  draw();
 }
 
 function main() {
   initSocket();
-  draw();
+  initRenderer();
 }
 
 main();

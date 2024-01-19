@@ -6,7 +6,7 @@ import { log, unwrap } from "../../shared/util";
 import { Message, ServerState } from "../../shared/state";
 
 const state: ServerState = {
-  idCounter: 0,
+  idCounter: 1,
   game: {
     positions: {},
   },
@@ -77,13 +77,11 @@ function main(): void {
 
       switch (msg.type) {
         case "joinGameRequest": {
-          state.game.positions[state.idCounter] = { x: -2, y: 0, z: -2 };
+          state.game.positions[state.idCounter] = { x: state.idCounter, y: 0, z: 0 };
           const reply: Message = {
             type: "joinGameResponse",
-            clientState: {
-              id: state.idCounter,
-              game: state.game,
-            },
+            id: state.idCounter,
+            game: state.game,
           };
           log({ "sent reply": reply });
           ws.send(JSON.stringify(reply));

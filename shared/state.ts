@@ -17,13 +17,8 @@ export type ServerState = {
   game: Game;
 };
 
-export type ClientState = {
-  id: ClientId;
-  game: Game;
-};
-
 export type Input = Pos;
 
 export type Message =
   | { type: "joinGameRequest" }
-  | { type: "joinGameResponse"; clientState: ClientState };
+  | { type: "joinGameResponse"; id: ClientId, game: Game };
