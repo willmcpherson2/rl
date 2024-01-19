@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { log, unwrap } from "../../shared/util";
 import { ClientId, Game, Message } from "../../shared/state";
 
-export type State = {
+type State = {
   idCounter: ClientId;
   game: Game;
 };
