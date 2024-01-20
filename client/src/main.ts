@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
 import models from "./models/models.gltf";
 import { ClientId, Input, Message } from "../../shared/state";
+import { url, port } from "../../shared/env";
 
 type State = {
   id: ClientId;
@@ -16,9 +17,9 @@ type State = {
 };
 
 function initSocket(state: State): void {
-  const port = 3000;
-  log({ port });
-  const ws = new WebSocket(`ws://localhost:${port}`);
+  const socket = `ws://${url}:${port}`;
+  log({ socket });
+  const ws = new WebSocket(socket);
 
   ws.addEventListener("message", event => {
     const msg: Message = JSON.parse(event.data);

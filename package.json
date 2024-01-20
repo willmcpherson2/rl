@@ -5,13 +5,13 @@
     "dev:server": "npx webpack --config server/webpack.config.js --mode=development --devtool inline-source-map",
     "dev:client": "npx webpack --config client/webpack.config.js --mode=development --devtool inline-source-map",
     "dev:build": "npx concurrently npm:dev:server npm:dev:client",
-    "dev:start": "node --watch --enable-source-maps dist/server/main.js 3000 dist/client",
+    "dev:start": "node --watch --enable-source-maps dist/server/main.js",
     "dev:watch": "npx concurrently -P npm:dev:start 'npm:dev:server -- {1}' 'npm:dev:client -- {1}' -- --watch",
     "dev": "npm run dev:build && npm run dev:watch",
-    "prod:server": "npx webpack --config server/webpack.config.js  --mode=production",
+    "prod:server": "npx webpack --config server/webpack.config.js --mode=production",
     "prod:client": "npx webpack --config client/webpack.config.js --mode=production",
     "prod:build": "npx concurrently npm:prod:server npm:prod:client",
-    "prod:start": "node dist/server/main.js 3000 dist/client",
+    "prod:start": "node dist/server/main.js",
     "prod": "npm run prod:build && npm run prod:start"
   },
   "devDependencies": {

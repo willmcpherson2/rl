@@ -5,6 +5,7 @@ import * as path from "node:path";
 import * as THREE from "three";
 import { log, unwrap } from "../../shared/util";
 import { ClientId, Game, Message } from "../../shared/state";
+import { url, port, root } from "../../shared/env";
 
 type State = {
   idCounter: ClientId;
@@ -109,12 +110,11 @@ function send(ws: WebSocket, msg: Message): void {
 }
 
 function main(): void {
-  const port = unwrap(process.argv[2], "no port number supplied: `node SCRIPT PORT DIR`");
-  const root = path.join(
-    process.cwd(),
-    unwrap(process.argv[3], "no root directory supplied: `node SCRIPT PORT DIR`"),
-  );
-  log({ port, root });
+  const rootAbsolute = path.join(process.cwd(), root);
+  log({
+    url: `http://${url}:${port}`,
+    root: rootAbsolute,
+  });
 
   const state: State = {
     idCounter: 0,
@@ -123,7 +123,7 @@ function main(): void {
     },
   };
 
-  const server = initServer(root);
+  const server = initServer(rootAbsolute);
   initSocket(server, state);
   server.listen(port);
 }
