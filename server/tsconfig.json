@@ -2,8 +2,8 @@
   "compilerOptions": {
     "outDir": "../dist/server",
     "sourceMap": true,
-    "module": "esnext",
-    "target": "es2017",
+    "module": "es6",
+    "target": "es6",
     "moduleResolution": "node",
     "strict": true,
     "exactOptionalPropertyTypes": true,
