@@ -3,16 +3,16 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
 import models from "./models/models.gltf";
-import { ClientId, Game, Message } from "../../shared/state";
+import { ClientId, Input, Message } from "../../shared/state";
 
 type State = {
   id: ClientId;
-  game: Game;
   player: THREE.Object3D;
   scene: THREE.Scene;
   models: {
     [key: ClientId]: THREE.Object3D;
   };
+  lastInput: Input;
 };
 
 function initSocket(state: State): void {
@@ -27,9 +27,8 @@ function initSocket(state: State): void {
     switch (msg.type) {
       case "joinGameResponse": {
         state.id = msg.id;
-        state.game = msg.game;
         state.models = Object.fromEntries(
-          Object.entries(state.game.positions).map(([id, pos]) => {
+          Object.entries(msg.game.positions).map(([id, pos]) => {
             const player = state.player.clone();
             player.position.copy(pos);
             state.scene.add(player);
@@ -42,16 +41,63 @@ function initSocket(state: State): void {
         if (msg.id === state.id) {
           break;
         }
-        state.game = msg.game;
         const player = state.player.clone();
-        const pos = unwrap(state.game.positions[msg.id], `no player with id ${msg.id}`);
+        const pos = unwrap(msg.position, `no player with id ${msg.id}`);
         player.position.copy(pos);
         state.scene.add(player);
         state.models = { ...state.models, [msg.id]: player };
         break;
       }
+      case "playerMoved": {
+        const model = unwrap(state.models[msg.id], `no model with id ${msg.id}`);
+        model.position.copy(msg.position);
+        break;
+      }
     }
   });
+
+  const keys: Set<string> = new Set();
+  document.addEventListener("keydown", event => {
+    keys.add(event.key);
+    sendInput(state, ws, keys);
+  });
+  document.addEventListener("keyup", event => {
+    keys.delete(event.key);
+    sendInput(state, ws, keys);
+  });
+}
+
+function sendInput(state: State, ws: WebSocket, keys: Set<string>): void {
+  const input = calculateInput(keys);
+  if (inputEquals(input, state.lastInput)) {
+    return;
+  }
+  state.lastInput = input;
+  const msg: Message = {
+    type: "playerInput",
+    id: state.id,
+    input,
+  };
+  log({ "sent message": msg });
+  ws.send(JSON.stringify(msg));
+}
+
+function inputEquals(a: Input, b: Input): boolean {
+  return a.direction.equals(b.direction);
+}
+
+function calculateInput(keys: Set<string>): Input {
+  return {
+    direction: calculateDirection(keys),
+  };
+}
+
+function calculateDirection(keys: Set<string>): THREE.Vector3 {
+  return new THREE.Vector3(
+    Number(keys.has("ArrowRight")) - Number(keys.has("ArrowLeft")),
+    0,
+    Number(keys.has("ArrowDown")) - Number(keys.has("ArrowUp")),
+  );
 }
 
 async function loadModel(): Promise<THREE.Object3D> {
@@ -107,12 +153,12 @@ function initRenderer(state: State): void {
 async function main() {
   const state: State = {
     id: 0,
-    game: {
-      positions: {},
-    },
     scene: new THREE.Scene(),
     player: await loadModel(),
     models: {},
+    lastInput: {
+      direction: new THREE.Vector3(),
+    },
   };
 
   initSocket(state);

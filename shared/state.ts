@@ -8,8 +8,12 @@ export type Game = {
   };
 };
 
-export type Input = THREE.Vector3;
+export type Input = {
+  direction: THREE.Vector3;
+}
 
 export type Message =
   | { type: "joinGameResponse"; id: ClientId; game: Game }
-  | { type: "playerJoined"; id: ClientId; game: Game };
+  | { type: "playerJoined"; id: ClientId; position: THREE.Vector3 }
+  | { type: "playerInput"; id: ClientId; input: Input }
+  | { type: "playerMoved"; id: ClientId; position: THREE.Vector3 };

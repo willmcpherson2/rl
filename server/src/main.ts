@@ -69,10 +69,29 @@ function initSocket(server: Server, state: State): void {
     ws.on("message", data => {
       const msg: Message = JSON.parse(data.toString());
       log({ "got message": msg });
+
+      switch (msg.type) {
+        case "playerInput": {
+          const pos = unwrap(state.game.positions[msg.id], `no player with id ${msg.id}`);
+          const newPos = pos.add(msg.input.direction);
+          state.game.positions[msg.id] = newPos;
+          wss.clients.forEach(ws => {
+            const reply: Message = {
+              type: "playerMoved",
+              id: msg.id,
+              position: newPos,
+            };
+            log({ "sent reply": reply });
+            ws.send(JSON.stringify(reply));
+          });
+          break;
+        }
+      }
     });
 
     state.idCounter += 1;
-    state.game.positions[state.idCounter] = new THREE.Vector3(state.idCounter, 0, 0);
+    const pos = new THREE.Vector3(state.idCounter, 0, 0);
+    state.game.positions[state.idCounter] = pos;
 
     const reply: Message = {
       type: "joinGameResponse",
@@ -86,7 +105,7 @@ function initSocket(server: Server, state: State): void {
       const reply: Message = {
         type: "playerJoined",
         id: state.idCounter,
-        game: state.game,
+        position: pos,
       };
       log({ "sent reply": reply });
       ws.send(JSON.stringify(reply));
