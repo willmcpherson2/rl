@@ -15,17 +15,7 @@ type State = {
   };
 };
 
-const state: State = {
-  id: 0,
-  game: {
-    positions: {},
-  },
-  scene: new THREE.Scene(),
-  player: await loadModel(),
-  models: {},
-};
-
-function initSocket(): void {
+function initSocket(state: State): void {
   const port = 3000;
   log({ port });
   const ws = new WebSocket(`ws://localhost:${port}`);
@@ -74,7 +64,7 @@ async function loadModel(): Promise<THREE.Object3D> {
   return model;
 }
 
-function initRenderer(): void {
+function initRenderer(state: State): void {
   state.scene.add(new THREE.AxesHelper(5));
 
   const camera = new THREE.PerspectiveCamera(
@@ -114,9 +104,19 @@ function initRenderer(): void {
   draw();
 }
 
-function main() {
-  initSocket();
-  initRenderer();
+async function main() {
+  const state: State = {
+    id: 0,
+    game: {
+      positions: {},
+    },
+    scene: new THREE.Scene(),
+    player: await loadModel(),
+    models: {},
+  };
+
+  initSocket(state);
+  initRenderer(state);
 }
 
 main();

@@ -11,13 +11,6 @@ type State = {
   game: Game;
 };
 
-const state: State = {
-  idCounter: 0,
-  game: {
-    positions: {},
-  },
-};
-
 function showRequest(req: IncomingMessage): object {
   return {
     method: req.method,
@@ -69,7 +62,7 @@ function initServer(root: string): Server {
   });
 }
 
-function initSocket(server: Server): void {
+function initSocket(server: Server, state: State): void {
   const wss = new WebSocketServer({ server });
 
   wss.on("connection", ws => {
@@ -109,8 +102,15 @@ function main(): void {
   );
   log({ port, root });
 
+  const state: State = {
+    idCounter: 0,
+    game: {
+      positions: {},
+    },
+  };
+
   const server = initServer(root);
-  initSocket(server);
+  initSocket(server, state);
   server.listen(port);
 }
 
