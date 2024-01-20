@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, Server, ServerResponse } from "node:http";
 import { readFile } from "node:fs";
-import { WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 import * as path from "node:path";
 import * as THREE from "three";
 import { log, unwrap } from "../../shared/util";
@@ -68,22 +68,18 @@ function initSocket(server: Server, state: State): void {
   wss.on("connection", ws => {
     ws.on("message", data => {
       const msg: Message = JSON.parse(data.toString());
-      log({ "got message": msg });
+      log({ "server received": msg });
 
       switch (msg.type) {
         case "playerInput": {
           const pos = unwrap(state.game.positions[msg.id], `no player with id ${msg.id}`);
           const newPos = pos.add(msg.input.direction);
           state.game.positions[msg.id] = newPos;
-          wss.clients.forEach(ws => {
-            const reply: Message = {
-              type: "playerMoved",
-              id: msg.id,
-              position: newPos,
-            };
-            log({ "sent reply": reply });
-            ws.send(JSON.stringify(reply));
-          });
+          wss.clients.forEach(ws => send(ws, {
+            type: "playerMoved",
+            id: msg.id,
+            position: newPos,
+          }));
           break;
         }
       }
@@ -93,24 +89,23 @@ function initSocket(server: Server, state: State): void {
     const pos = new THREE.Vector3(state.idCounter, 0, 0);
     state.game.positions[state.idCounter] = pos;
 
-    const reply: Message = {
+    send(ws, {
       type: "joinGameResponse",
       id: state.idCounter,
       game: state.game,
-    };
-    log({ "sent reply": reply });
-    ws.send(JSON.stringify(reply));
-
-    wss.clients.forEach(ws => {
-      const reply: Message = {
-        type: "playerJoined",
-        id: state.idCounter,
-        position: pos,
-      };
-      log({ "sent reply": reply });
-      ws.send(JSON.stringify(reply));
     });
+
+    wss.clients.forEach(ws => send(ws, {
+      type: "playerJoined",
+      id: state.idCounter,
+      position: pos,
+    }));
   });
+}
+
+function send(ws: WebSocket, msg: Message): void {
+  log({ "server sent": msg });
+  ws.send(JSON.stringify(msg));
 }
 
 function main(): void {

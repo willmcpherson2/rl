@@ -22,7 +22,7 @@ function initSocket(state: State): void {
 
   ws.addEventListener("message", event => {
     const msg: Message = JSON.parse(event.data);
-    log({ "got message": msg });
+    log({ "client received": msg });
 
     switch (msg.type) {
       case "joinGameResponse": {
@@ -73,12 +73,15 @@ function sendInput(state: State, ws: WebSocket, keys: Set<string>): void {
     return;
   }
   state.lastInput = input;
-  const msg: Message = {
+  send(ws, {
     type: "playerInput",
     id: state.id,
     input,
-  };
-  log({ "sent message": msg });
+  });
+}
+
+function send(ws: WebSocket, msg: Message): void {
+  log({ "client sent": msg });
   ws.send(JSON.stringify(msg));
 }
 
