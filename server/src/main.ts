@@ -4,11 +4,13 @@ import { WebSocket, WebSocketServer } from "ws";
 import * as path from "node:path";
 import * as THREE from "three";
 import { log, unwrap } from "../../shared/util";
-import { ClientId, Game, Message } from "../../shared/state";
+import { ClientId, Game, Inputs, Message } from "../../shared/state";
 import { url, port, root } from "../../shared/env";
 
 type State = {
   idCounter: ClientId;
+  now: number;
+  inputs: Inputs;
   game: Game;
 };
 
@@ -69,18 +71,11 @@ function initSocket(server: Server, state: State): void {
   wss.on("connection", ws => {
     ws.on("message", data => {
       const msg: Message = JSON.parse(data.toString());
-      log({ "server received": msg });
+      // log({ "server received": msg });
 
       switch (msg.type) {
         case "playerInput": {
-          const pos = unwrap(state.game.positions[msg.id], `no player with id ${msg.id}`);
-          const newPos = pos.add(msg.input.direction);
-          state.game.positions[msg.id] = newPos;
-          wss.clients.forEach(ws => send(ws, {
-            type: "playerMoved",
-            id: msg.id,
-            position: newPos,
-          }));
+          state.inputs[msg.id] = msg.input;
           break;
         }
       }
@@ -91,22 +86,35 @@ function initSocket(server: Server, state: State): void {
     state.game.positions[state.idCounter] = pos;
 
     send(ws, {
-      type: "joinGameResponse",
+      type: "initClient",
       id: state.idCounter,
-      game: state.game,
     });
-
-    wss.clients.forEach(ws => send(ws, {
-      type: "playerJoined",
-      id: state.idCounter,
-      position: pos,
-    }));
   });
+
+  setInterval(() => updateClients(wss, state), 10);
+}
+
+function updateClients(wss: WebSocketServer, state: State): void {
+  wss.clients.forEach(ws => send(ws, {
+    type: "gameUpdate",
+    game: state.game,
+  }));
 }
 
 function send(ws: WebSocket, msg: Message): void {
-  log({ "server sent": msg });
+  // log({ "server sent": msg });
   ws.send(JSON.stringify(msg));
+}
+
+function simulate(state: State): void {
+  const now = Date.now();
+  const delta = now - state.now;
+  const speed = 0.001;
+  state.now = now;
+  Object.entries(state.inputs).forEach(([id, input]) => {
+    const pos = unwrap(state.game.positions[parseInt(id)], `no position for id ${id}`);
+    pos.addScaledVector(input.direction, delta * speed);
+  });
 }
 
 function main(): void {
@@ -118,6 +126,8 @@ function main(): void {
 
   const state: State = {
     idCounter: 0,
+    now: Date.now(),
+    inputs: {},
     game: {
       positions: {},
     },
@@ -126,6 +136,7 @@ function main(): void {
   const server = initServer(rootAbsolute);
   initSocket(server, state);
   server.listen(port);
+  setInterval(() => simulate(state), 10);
 }
 
 main();

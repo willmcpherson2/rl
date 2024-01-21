@@ -8,7 +8,7 @@ import { url, port } from "../../shared/env";
 
 type State = {
   id: ClientId;
-  player: THREE.Object3D;
+  model: THREE.Object3D;
   scene: THREE.Scene;
   models: {
     [key: ClientId]: THREE.Object3D;
@@ -23,35 +23,23 @@ function initSocket(state: State): void {
 
   ws.addEventListener("message", event => {
     const msg: Message = JSON.parse(event.data);
-    log({ "client received": msg });
+    // log({ "client received": msg });
 
     switch (msg.type) {
-      case "joinGameResponse": {
+      case "initClient": {
         state.id = msg.id;
-        state.models = Object.fromEntries(
-          Object.entries(msg.game.positions).map(([id, pos]) => {
-            const player = state.player.clone();
-            player.position.copy(pos);
-            state.scene.add(player);
-            return [id, player];
-          }),
-        );
         break;
       }
-      case "playerJoined": {
-        if (msg.id === state.id) {
-          break;
-        }
-        const player = state.player.clone();
-        const pos = unwrap(msg.position, `no player with id ${msg.id}`);
-        player.position.copy(pos);
-        state.scene.add(player);
-        state.models = { ...state.models, [msg.id]: player };
-        break;
-      }
-      case "playerMoved": {
-        const model = unwrap(state.models[msg.id], `no model with id ${msg.id}`);
-        model.position.copy(msg.position);
+      case "gameUpdate": {
+        Object.entries(msg.game.positions).forEach(([id, pos]) => {
+          const i = parseInt(id);
+          if (!state.models[i]) {
+            state.models[i] = state.model.clone();
+            state.scene.add(unwrap(state.models[i], `no model for id ${id}`));
+          }
+          const model = unwrap(state.models[i], `no model for id ${id}`);
+          model.position.copy(pos);
+        });
         break;
       }
     }
@@ -82,7 +70,7 @@ function sendInput(state: State, ws: WebSocket, keys: Set<string>): void {
 }
 
 function send(ws: WebSocket, msg: Message): void {
-  log({ "client sent": msg });
+  // log({ "client sent": msg });
   ws.send(JSON.stringify(msg));
 }
 
@@ -158,7 +146,7 @@ async function main() {
   const state: State = {
     id: 0,
     scene: new THREE.Scene(),
-    player: await loadModel(),
+    model: await loadModel(),
     models: {},
     lastInput: {
       direction: new THREE.Vector3(),

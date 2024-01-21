@@ -10,10 +10,13 @@ export type Game = {
 
 export type Input = {
   direction: THREE.Vector3;
-}
+};
+
+export type Inputs = {
+  [key: ClientId]: Input;
+};
 
 export type Message =
-  | { type: "joinGameResponse"; id: ClientId; game: Game }
-  | { type: "playerJoined"; id: ClientId; position: THREE.Vector3 }
+  | { type: "initClient"; id: ClientId; }
   | { type: "playerInput"; id: ClientId; input: Input }
-  | { type: "playerMoved"; id: ClientId; position: THREE.Vector3 };
+  | { type: "gameUpdate"; game: Game };
